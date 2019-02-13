@@ -8,7 +8,7 @@ from parser.parser import lecture_enum
 
 
 def callback(day:int, start: int, finish: int, sub: str, type: int, teacher: ty.Optional[str], group: str,
-             sub_group: ty.Optional[str], room: str, hash: str)->None:
+             sub_group: ty.Optional[ty.List[str]], room: str, hash: str)->None:
 
     if type == lecture_enum.LECTURE:
         type_name = 'Predavanje'
