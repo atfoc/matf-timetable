@@ -7,7 +7,7 @@ import bs4
 
 import typing as ty
 
-callback_T = ty.Callable[[str, int, str, str, ty.Optional[str], str, str], None]
+callback_T = ty.Callable[[str, int, str, str, ty.Optional[ty.List[str]], str, str], None]
 logger = logging.getLogger(__name__)
 
 
@@ -60,7 +60,7 @@ class parser:
                 lecture_enum
                 teacher: str - name of the teacher
                 group: str - name of the group
-                sub_group: Optional[str] - optional sub group
+                sub_group: Optional[List[str]] - optional sub group
                 room: str - room that lecture takes place
                 hash: str - hast compare to with others
         """
@@ -173,11 +173,15 @@ def parse_cell(cell: bs4.Tag, callback: callback_T, time: int, day: int, group: 
         if l == 5:
             callback(day, time, time + duration, tmp[0], type, tmp[2], group, None, tmp[4], hash)
         elif l == 7:
-            callback(day, time, time + duration, tmp[0], type, tmp[4], group, tmp[2], tmp[6], hash)
+            groups = list(map(lambda x: x.strip(), tmp[2].split(',')))
+            #callback(day, time, time + duration, tmp[0], type, tmp[4], group, tmp[2], tmp[6], hash)
+            callback(day, time, time + duration, tmp[0], type, tmp[4], group, groups, tmp[6], hash)
         elif l == 4:
             callback(day, time, time + duration, tmp[0], type, None, group, None, tmp[3], hash)
         elif l == 6:
-            callback(day, time, time + duration, tmp[0], type, None, group, tmp[2], tmp[5], hash)
+            groups = list(map(lambda x: x.strip(), tmp[2].split(',')))
+            #callback(day, time, time + duration, tmp[0], type, None, group, tmp[2], tmp[5], hash)
+            callback(day, time, time + duration, tmp[0], type, None, group, groups, tmp[5], hash)
         elif l != 0 and l != 1:
             logger.critical('Found cell with %s content length', l)
             sys.exit(1)
