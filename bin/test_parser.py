@@ -1,7 +1,7 @@
 import logging
 
-from lib.timetable_parser.parser import parser
-from lib.timetable_parser import timetable_unit
+from timetable_parser.parser import parser
+from timetable_parser import timetable_unit
 
 
 

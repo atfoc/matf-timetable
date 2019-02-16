@@ -2,7 +2,7 @@ import logging
 import typing as ty
 import os
 from dashtable import data2rst
-from lib.timetable_parser.parser import parser
+from timetable_parser.parser import parser
 
 
 
