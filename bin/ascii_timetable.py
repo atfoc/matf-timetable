@@ -3,6 +3,7 @@ import typing as ty
 import os
 from dashtable import data2rst
 from timetable_parser.parser import parser
+from timetable_parser.timetable_unit import timetable_unit
 
 
 
@@ -16,26 +17,25 @@ class callback:
         self.reset()
 
 
-    def __call__(self, day:int, start: int, finish: int, sub: str, type: int, teacher: ty.Optional[str], group: str,
-                 sub_group: ty.Optional[str], room: str, hash: str)->None:
+    def __call__(self, unit: timetable_unit)->None:
 
 
         if self.group == '':
-            self.group = group
-        if self.group != group:
+            self.group = unit.group
+        if self.group != unit.group:
             self.print()
-            self.group = group
+            self.group = unit.group
             self.reset()
 
-        if self.table[day+1][start-7] == '':
-            self.table[day+1][start-7] = sub + '\n' + (teacher if teacher is not None else '')
+        if self.table[unit.day+1][unit.start_time-7] == '':
+            self.table[unit.day+1][unit.start_time-7] = unit.subject+ '\n' + unit.sub_group_safe()
         else:
-            if isinstance(self.table[day+1][start-7], list):
-                self.table[day+1][start-7].append([sub + '\n' + (teacher if teacher is not None else '')])
+            if isinstance(self.table[unit.day+1][unit.start_time-7], list):
+                self.table[unit.day+1][unit.start_time-7].append([unit.subject+ '\n' + unit.teacher_safe()])
             else:
-                self.table[day+1][start-7] = [[self.table[day+1][start-7]], [sub + '\n' + (teacher if teacher is not None else '')]]
-        if start != finish-1:
-            self.span.append([[day+1, i] for i in range(start-7, finish-7)])
+                self.table[unit.day+1][unit.start_time-7] = [[self.table[unit.day+1][unit.start_time-7]], [unit.subject + '\n' + unit.teacher_safe()]]
+        if unit.start_time != unit.finish_time-1:
+            self.span.append([[unit.day+1, i] for i in range(unit.start_time-7, unit.finish_time-7)])
 
 
 
