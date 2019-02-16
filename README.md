@@ -9,7 +9,7 @@ you can do this like this.
 ```bash
 /path/to/python3.6 -m venv ./venv
 source ./venv/bin/activate
-pip install .
+pip install .lib/
 ```
 
 This installs all requirements and also code for parser so that scripts can
