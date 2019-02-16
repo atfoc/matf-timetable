@@ -2,7 +2,8 @@ import logging
 import typing as ty
 import os
 from dashtable import data2rst
-from parser.parser import parser
+from ..timetable_parser.parser import parser
+
 
 
 
@@ -65,7 +66,7 @@ class callback:
 
 
 def main():
-    logging.basicConfig(filename='parser.log', level=logging.DEBUG)
+    logging.basicConfig(filename='timetable_parser.log', level=logging.DEBUG)
 
     p = parser('http://poincare.matf.bg.ac.rs/~kmiljan/raspored/sve/index.html', True)
 
