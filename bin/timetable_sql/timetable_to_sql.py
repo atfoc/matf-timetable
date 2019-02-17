@@ -1,29 +1,19 @@
-from sqlalchemy import create_engine
-from sqlalchemy.sql import Insert, select
-from sqlalchemy.engine.result import  ResultProxy
-from sqlalchemy import Table, Column,  VARCHAR, MetaData, Integer
+import os
+from callback import callback, sqlite_connection_str
+from timetable_parser.parser import  parser
+
+# TODO: comand line interaction
+
+def main():
+    db_path = os.path.join(os.path.realpath('.'), 'test.db')
+    c = callback(sqlite_connection_str(db_path))
+
+    p = parser('http://poincare.matf.bg.ac.rs/~kmiljan/raspored/sve/index.html', True)
+    p.parse(c)
+
+    c.write_to_db()
 
 
-engine = create_engine('sqlite:///:memory:', echo=True)
+if __name__ == '__main__':
+    main()
 
-m = MetaData()
-
-users = Table('users', m,
-              Column('id', Integer, primary_key=True),
-              Column('name', VARCHAR(10)),
-              Column('fullname', VARCHAR(10)),
-              Column('nickname', VARCHAR(10))
-              )
-
-m.create_all(engine)
-
-ins = users.insert()
-ins =  ins.values(name='hi')
-ins.bind = engine
-str(ins)
-
-con = engine.connect()
-r = con.execute(ins, name='cao', fullname='hi')
-
-for i in con.execute(select([users])):
-    print(i)
