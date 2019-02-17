@@ -137,6 +137,7 @@ def get_all_cells(row: bs4.Tag) -> ty.List[bs4.Tag]:
 
 def parse_cell(cell: bs4.Tag, callback: callback_T, time: int, day: int, group: str) -> int:
 
+    group = group.strip()
     duration = int(cell['colspan']) if cell.has_attr('colspan') else 1
 
     table = cell.find('table')
@@ -163,25 +164,25 @@ def parse_cell(cell: bs4.Tag, callback: callback_T, time: int, day: int, group: 
 
 
         if l == 5:
-            res = timetable_unit(day=day, start_time=time, finish_time=time+duration, sub=tmp[0], type=type,
-                                 teacher=tmp[2], group=group, room=tmp[4], hash=hash)
+            res = timetable_unit(day=day, start_time=time, finish_time=time+duration, sub=tmp[0].strip(), type=type,
+                                 teacher=tmp[2].strip(), group=group, room=tmp[4].strip(), hash=hash)
             #callback(day, time, time + duration, tmp[0], type, tmp[2], group, None, tmp[4], hash)
             callback(res)
         elif l == 7:
             groups = list(map(lambda x: x.strip(), tmp[2].split(',')))
-            res = timetable_unit(day=day, start_time=time, finish_time=time+duration, sub=tmp[0], type=type,
-                                 teacher=tmp[4], group=group, groups= groups, room=tmp[6], hash=hash)
+            res = timetable_unit(day=day, start_time=time, finish_time=time+duration, sub=tmp[0].strip(), type=type,
+                                 teacher=tmp[4].strip(), group=group, sub_group=groups, room=tmp[6].strip(), hash=hash)
             callback(res)
             #callback(day, time, time + duration, tmp[0], type, tmp[4], group, groups, tmp[6], hash)
         elif l == 4:
-            res = timetable_unit(day=day, start_time=time, finish_time=time+duration, sub=tmp[0], type=type,
-                                 group=group, room=tmp[3], hash=hash)
+            res = timetable_unit(day=day, start_time=time, finish_time=time+duration, sub=tmp[0].strip(), type=type,
+                                 group=group, room=tmp[3].strip(), hash=hash)
             #callback(day, time, time + duration, tmp[0], type, None, group, None, tmp[3], hash)
             callback(res)
         elif l == 6:
             groups = list(map(lambda x: x.strip(), tmp[2].split(',')))
-            res = timetable_unit(day=day, start_time=time, finish_time=time+duration, sub=tmp[0], type=type,
-                                 group=group, groups=groups, room=tmp[5], hash=hash)
+            res = timetable_unit(day=day, start_time=time, finish_time=time+duration, sub=tmp[0].strip(), type=type,
+                                 group=group, sub_group=groups, room=tmp[5].strip(), hash=hash)
             #callback(day, time, time + duration, tmp[0], type, None, group, groups, tmp[5], hash)
             callback(res)
         elif l != 0 and l != 1:
