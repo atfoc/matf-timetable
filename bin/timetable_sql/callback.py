@@ -18,10 +18,14 @@ class callback:
         self.day = []
         self.engine_url = engine_url
         self.table_prefix = table_prefix
+        self.last_day = -1
 
 
     def __call__(self, unit: timetable_unit):
-        if len(self.days) != unit.day:
+        if self.last_day == -1:
+            self.last_day = unit.day
+        elif self.last_day != unit.day:
+            self.last_day = unit.day
             self.days.append(self.day)
             self.day = []
 
@@ -40,7 +44,10 @@ class callback:
         else:
             self.day.append(unit)
 
-
+    def print(self):
+        unit: timetable_unit
+        for unit in self.days[0]:
+            print(f'{unit.start_time}-{unit.finish_time}: {unit.subject}')
 
     def write_to_db(self):
         engine = create_engine(self.engine_url)

@@ -9,6 +9,7 @@ def main():
     c = callback(sqlite_connection_str(db_path))
 
     p = parser('http://poincare.matf.bg.ac.rs/~kmiljan/raspored/sve/index.html', True)
+
     p.parse(c)
 
     c.write_to_db()
