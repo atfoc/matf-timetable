@@ -65,7 +65,7 @@ class callback:
                       )
         subjects = Table(f'{self.table_prefix}subjects', m,
                          Column('subject_id', Integer, primary_key=True) ,
-                         Column('name', VARCHAR(50), nullable=False)
+                         Column('name', VARCHAR(100), nullable=False)
                          )
 
         professors = Table(f'{self.table_prefix}professors', m,
