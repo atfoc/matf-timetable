@@ -124,9 +124,9 @@ class callback:
             groups_mapping[group] = res.inserted_primary_key[0]
 
         ins = types.insert()
-        conn.execute(ins, type_id=lecture_enum.LECTURE, name='Predavanja')
-        conn.execute(ins, type_id=lecture_enum.PRACTICE , name='Praktikum')
-        conn.execute(ins, type_id=lecture_enum.PRACTICAL, name='Vezbe')
+        conn.execute(ins, type_id=lecture_enum.LECTURE, name='Предавања')
+        conn.execute(ins, type_id=lecture_enum.PRACTICE , name='Практикум')
+        conn.execute(ins, type_id=lecture_enum.PRACTICAL, name='Вежбе')
 
         ins = timetable.insert()
         self.days.append(self.day)
