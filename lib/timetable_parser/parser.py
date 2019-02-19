@@ -7,14 +7,13 @@ import bs4
 
 import typing as ty
 
+from .utils import lecture_enum
+from .timetable_unit import timetable_unit
+
 callback_T = ty.Callable[[str, int, str, str, ty.Optional[ty.List[str]], str, str], None]
 logger = logging.getLogger(__name__)
 
 
-class lecture_enum:
-    LECTURE: int = 0
-    PRACTICAL: int = 1
-    PRACTICE: int = 2
 
 
 class parser:
@@ -54,15 +53,7 @@ class parser:
 
     def parse(self, callback: callback_T):
         """
-        :param  callback is callable object or function that receives next arguments
-                subject:str  - subject name
-                type: int - lecture type 0 - lecture 1 - practical 2 - practice constants can be found in class
-                lecture_enum
-                teacher: str - name of the teacher
-                group: str - name of the group
-                sub_group: Optional[List[str]] - optional sub group
-                room: str - room that lecture takes place
-                hash: str - hast compare to with others
+        :param  callback is callable object or function that receives next arguments as timetable_unit class
         """
 
         response: r.Response = r.get(self.base_url)
@@ -146,6 +137,7 @@ def get_all_cells(row: bs4.Tag) -> ty.List[bs4.Tag]:
 
 def parse_cell(cell: bs4.Tag, callback: callback_T, time: int, day: int, group: str) -> int:
 
+    group = group.strip()
     duration = int(cell['colspan']) if cell.has_attr('colspan') else 1
 
     table = cell.find('table')
@@ -170,18 +162,29 @@ def parse_cell(cell: bs4.Tag, callback: callback_T, time: int, day: int, group: 
 
         hash = hashlib.md5(str(cell).encode('UTF-8')).hexdigest()
 
+
         if l == 5:
-            callback(day, time, time + duration, tmp[0], type, tmp[2], group, None, tmp[4], hash)
+            res = timetable_unit(day=day, start_time=time, finish_time=time+duration, sub=tmp[0].strip(), type=type,
+                                 teacher=tmp[2].strip(), group=group, room=tmp[4].strip(), hash=hash)
+            #callback(day, time, time + duration, tmp[0], type, tmp[2], group, None, tmp[4], hash)
+            callback(res)
         elif l == 7:
             groups = list(map(lambda x: x.strip(), tmp[2].split(',')))
-            #callback(day, time, time + duration, tmp[0], type, tmp[4], group, tmp[2], tmp[6], hash)
-            callback(day, time, time + duration, tmp[0], type, tmp[4], group, groups, tmp[6], hash)
+            res = timetable_unit(day=day, start_time=time, finish_time=time+duration, sub=tmp[0].strip(), type=type,
+                                 teacher=tmp[4].strip(), group=group, sub_group=groups, room=tmp[6].strip(), hash=hash)
+            callback(res)
+            #callback(day, time, time + duration, tmp[0], type, tmp[4], group, groups, tmp[6], hash)
         elif l == 4:
-            callback(day, time, time + duration, tmp[0], type, None, group, None, tmp[3], hash)
+            res = timetable_unit(day=day, start_time=time, finish_time=time+duration, sub=tmp[0].strip(), type=type,
+                                 group=group, room=tmp[3].strip(), hash=hash)
+            #callback(day, time, time + duration, tmp[0], type, None, group, None, tmp[3], hash)
+            callback(res)
         elif l == 6:
             groups = list(map(lambda x: x.strip(), tmp[2].split(',')))
-            #callback(day, time, time + duration, tmp[0], type, None, group, tmp[2], tmp[5], hash)
-            callback(day, time, time + duration, tmp[0], type, None, group, groups, tmp[5], hash)
+            res = timetable_unit(day=day, start_time=time, finish_time=time+duration, sub=tmp[0].strip(), type=type,
+                                 group=group, sub_group=groups, room=tmp[5].strip(), hash=hash)
+            #callback(day, time, time + duration, tmp[0], type, None, group, groups, tmp[5], hash)
+            callback(res)
         elif l != 0 and l != 1:
             logger.critical('Found cell with %s content length', l)
             sys.exit(1)
