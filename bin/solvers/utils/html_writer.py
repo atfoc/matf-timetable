@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup as bs
 from bs4 import Tag
 from timetable_parser.parser import  timetable_unit
 
-__num_to_day = {'0':'Ponedeljak', '1': 'Utorak', '2': 'Sreda', '3': 'Cetvrtak', '4': 'Petak'}
+__num_to_day = {'0': 'Понедељак', '1': 'Уторак', '2': 'Среда', '3': 'Четвртак', '4': 'Петак'}
 
 def __get_text_default(unit: timetable_unit)->str:
     return f'{unit.subject}\n{unit.type_text()}\n{unit.group}\n{unit.teacher_safe()}' \
