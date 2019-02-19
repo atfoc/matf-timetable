@@ -17,11 +17,11 @@ class timetable_unit:
 
     def type_text(self)->str:
         if self.type == lecture_enum.LECTURE:
-            type_name = 'Predavanje'
+            type_name = 'Предавања'
         elif self.type == lecture_enum.PRACTICAL:
-            type_name = 'Vezbe'
+            type_name = 'Вежбе'
         else:
-            type_name = 'Praktikum'
+            type_name = 'Практикум'
 
 
         return type_name
