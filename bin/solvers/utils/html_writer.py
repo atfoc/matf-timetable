@@ -5,8 +5,12 @@ from timetable_parser.parser import  timetable_unit
 
 __num_to_day = {'0':'Ponedeljak', '1': 'Utorak', '2': 'Sreda', '3': 'Cetvrtak', '4': 'Petak'}
 
-def timetable_to_html(lessons: ty.List[timetable_unit], get_text: ty.Callable[[timetable_unit], str],
-                      prettify: bool = True)->str:
+def __get_text_default(unit: timetable_unit)->str:
+    return f'{unit.subject}\n{unit.type_text()}\n{unit.group}\n{unit.teacher_safe()}' \
+        f'\n{unit.room}\n{",".join(unit.sub_group_safe())}'
+
+def timetable_to_html(lessons: ty.List[timetable_unit],
+                      get_text: ty.Callable[[timetable_unit], str] = __get_text_default, prettify: bool = True)->str:
     """
 
     :param lessons: list of lessons to put in table
