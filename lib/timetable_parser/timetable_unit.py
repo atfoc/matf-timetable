@@ -16,9 +16,9 @@ class timetable_unit:
         self.sub_group: ty.Optional[ty.List[str]] = kwargs.get('sub_group')
 
     def type_text(self)->str:
-        if type == lecture_enum.LECTURE:
+        if self.type == lecture_enum.LECTURE:
             type_name = 'Predavanje'
-        elif type == lecture_enum.PRACTICAL:
+        elif self.type == lecture_enum.PRACTICAL:
             type_name = 'Vezbe'
         else:
             type_name = 'Praktikum'
