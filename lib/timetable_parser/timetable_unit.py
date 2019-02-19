@@ -30,4 +30,4 @@ class timetable_unit:
         return self.teacher if self.teacher is not None else ''
 
     def sub_group_safe(self)->ty.List[str]:
-        return self.sub_group if self.sub_group is not None else ''
+        return self.sub_group if self.sub_group is not None else []
