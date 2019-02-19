@@ -65,7 +65,7 @@ class callback:
                       )
         subjects = Table(f'{self.table_prefix}subjects', m,
                          Column('subject_id', Integer, primary_key=True) ,
-                         Column('name', VARCHAR(50), nullable=False)
+                         Column('name', VARCHAR(100), nullable=False)
                          )
 
         professors = Table(f'{self.table_prefix}professors', m,
@@ -124,9 +124,9 @@ class callback:
             groups_mapping[group] = res.inserted_primary_key[0]
 
         ins = types.insert()
-        conn.execute(ins, type_id=lecture_enum.LECTURE, name='Predavanja')
-        conn.execute(ins, type_id=lecture_enum.PRACTICE , name='Praktikum')
-        conn.execute(ins, type_id=lecture_enum.PRACTICAL, name='Vezbe')
+        conn.execute(ins, type_id=lecture_enum.LECTURE, name='Предавања')
+        conn.execute(ins, type_id=lecture_enum.PRACTICE , name='Практикум')
+        conn.execute(ins, type_id=lecture_enum.PRACTICAL, name='Вежбе')
 
         ins = timetable.insert()
         self.days.append(self.day)
@@ -143,8 +143,13 @@ class callback:
 
 
 
-def mysql_connection_str()->str:
-    pass
+def mysql_connection_str(username: str, password: str, host: str, port: str,
+                         db_name: str )->str:
+    if port != '':
+        port = f':{port}'
+    if password != '':
+        password = f':{password}'
+    return f'mysql+pymysql://{username}{password}@{host}{port}/{db_name}'
 
 
 def sqlite_connection_str(path: str)->str:

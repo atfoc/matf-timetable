@@ -16,12 +16,12 @@ class timetable_unit:
         self.sub_group: ty.Optional[ty.List[str]] = kwargs.get('sub_group')
 
     def type_text(self)->str:
-        if type == lecture_enum.LECTURE:
-            type_name = 'Predavanje'
-        elif type == lecture_enum.PRACTICAL:
-            type_name = 'Vezbe'
+        if self.type == lecture_enum.LECTURE:
+            type_name = 'Предавања'
+        elif self.type == lecture_enum.PRACTICAL:
+            type_name = 'Вежбе'
         else:
-            type_name = 'Praktikum'
+            type_name = 'Практикум'
 
 
         return type_name
@@ -30,4 +30,4 @@ class timetable_unit:
         return self.teacher if self.teacher is not None else ''
 
     def sub_group_safe(self)->ty.List[str]:
-        return self.sub_group if self.sub_group is not None else ''
+        return self.sub_group if self.sub_group is not None else []

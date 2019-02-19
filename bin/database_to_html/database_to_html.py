@@ -2,9 +2,10 @@ import os
 from sqlalchemy import create_engine, MetaData, Table, and_
 from sqlalchemy.engine import ResultProxy
 from sqlalchemy.sql import select
-
 from bs4 import BeautifulSoup as bs
 from bs4 import Tag
+import argparse as argp
+import sys
 
 def sqlite_connection_str(path: str)->str:
     """ :param path - absolute path to db or :memory: for in memory db"""
@@ -14,18 +15,35 @@ def sqlite_connection_str(path: str)->str:
 num_to_day = {'0':'Ponedeljak', '1': 'Utorak', '2': 'Sreda', '3': 'Cetvrtak', '4': 'Petak'}
 
 def main():
-    db_path = os.path.join(os.path.realpath('.'), 'db.sqlite')
+
+    parser = make_parser()
+
+    ns = parser.parse_args(sys.argv[1:])
+    ns.prefix = f'{ns.prefix}_' if ns.prefix != '' else ''
+
+    if not os.path.exists(ns.out_path):
+        os.mkdir(ns.out_path)
+    elif not os.path.isdir(ns.out_path):
+        sys.exit(f'{ns.out_path} is not dir')
+
+    if not os.path.exists(ns.path):
+        sys.exit(f'{ns.path} dose not exist')
+
+
+
+
+    db_path = ns.path
     engine = create_engine(sqlite_connection_str(db_path))
 
     m = MetaData()
     m.reflect(engine)
 
-    timetable: Table = m.tables['timetable']
-    groups: Table = m.tables['groups']
-    professors: Table = m.tables['professors']
-    rooms: Table = m.tables['rooms']
-    subjects: Table = m.tables['subjects']
-    types: Table = m.tables['types']
+    timetable: Table = m.tables[f'{ns.prefix}timetable']
+    groups: Table = m.tables[f'{ns.prefix}groups']
+    professors: Table = m.tables[f'{ns.prefix}professors']
+    rooms: Table = m.tables[f'{ns.prefix}rooms']
+    subjects: Table = m.tables[f'{ns.prefix}subjects']
+    types: Table = m.tables[f'{ns.prefix}types']
 
     conn = engine.connect()
 
@@ -56,17 +74,14 @@ def main():
 
         group_map[i[0]][str(i[1])].append(make_unit(i))
 
-    path = os.path.join('.', 'raspored')
 
-    if not os.path.exists(path):
-        os.mkdir(path)
 
     for group, data in group_map.items():
-        make_group_html(group, data)
+        make_group_html(group, data, ns.out_path)
 
     res.close()
 
-def make_group_html(group, data):
+def make_group_html(group, data, path):
     soup = bs('', 'html.parser')
 
     table = soup.new_tag('table')
@@ -103,7 +118,7 @@ def make_group_html(group, data):
     for day, day_data in data.items():
         make_day(day, day_data, soup, table)
 
-    with open(os.path.join('.', 'raspored', f'{group}.html'), 'w') as f:
+    with open(os.path.join(path, f'{group}.html'), 'w') as f:
         f.write(soup.prettify())
 
 def make_day(day, data, soup: bs, tag: Tag):
@@ -181,6 +196,15 @@ def make_unit(row):
        res[name] =  row[i]
 
     return res
+
+def make_parser()->argp.ArgumentParser:
+    parser = argp.ArgumentParser()
+    parser.add_argument('path', help='Path to sqlite database')
+    parser.add_argument('--prefix', help='Prefix for database table names', default='')
+    parser.add_argument('out_path', help='Output path where to gen html')
+
+    return parser
+
 
 if __name__ == '__main__':
     main()
