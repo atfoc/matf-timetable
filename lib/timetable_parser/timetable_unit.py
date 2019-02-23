@@ -22,8 +22,6 @@ class timetable_unit:
             type_name = 'Вежбе'
         else:
             type_name = 'Практикум'
-
-
         return type_name
 
     def teacher_safe(self)->str:
@@ -31,3 +29,12 @@ class timetable_unit:
 
     def sub_group_safe(self)->ty.List[str]:
         return self.sub_group if self.sub_group is not None else []
+
+    def __str__(self):
+        return str(self.subject) + ' ' + str(self.type) + ' ' + str(self.group) +  ' (dan: ' + str(self.day) + ', start: ' + \
+                str(self.start_time) + ', end: ' + str(self.finish_time) + ', room: ' + str(self.room)\
+                +')'
+
+    def __repr__(self):
+        return self.__str__()
+               
