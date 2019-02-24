@@ -1,16 +1,3 @@
-"""
-MENI TREBA:
-    <koje predmete slusa, na kom smeru> [kod kojih profesora]
-
-PEDJI JEDINO TREBA:
-    formula koja kaze da on K termina necega sme da se slusa TACNO jedan
-    da da niz t/f i da kaze tacno netacno
-    ----||------ vrati niz time-unita
-
-PEDJI NE TREBA:
-    preklapanje predavanja, to NE TREBA da bude u formuli
-
-"""
 import os
 from timetable_parser.timetable_unit import timetable_unit
 from sqlalchemy import create_engine, MetaData, Table, and_
@@ -152,7 +139,6 @@ class FormulaGenerator:
                                         result[3],result[4],result[5],result[0],result[7],'hash'))
         self.all_timetable_units = list(self.all_timetable_units)
 
-    #TODO bolje ime
     def __map_courses_to_units(self):
         self.course_units = {}
         for unit in self.all_timetable_units:
@@ -213,7 +199,7 @@ class FormulaGenerator:
             self.all_timetable_units.append(self.removed_unit)
         self.course_units = {}
         self.formula = []
-        self.removed_unit = self.all_timetable_units[0] #TODO test, ovo vraca PROIZVOLJAN element, ne svidja mi se bas
+        self.removed_unit = self.all_timetable_units[0] 
         print(self.removed_unit)
         self.all_timetable_units.remove(self.removed_unit)
 
@@ -233,43 +219,41 @@ def main():
 
     fg = FormulaGenerator("test_input.txt")
 
-    num_of_results = 1
+    num_of_results = 0
     unsat_count = 0
     fg.code()
     c = cnf_coded_formula(fg.formula)
     cnf_string = c.create_cnf_str()
 
     while True:
-        if unsat_count > 1000 or num_of_results > 20:
+        if unsat_count > 1000 or num_of_results > 100:
             break
         cnf_in = open("out.cnf", "w")
         cnf_out = open("solution.cnf", "r")
-        #  cnf_in.truncate()
-        #  cnf_in.seek(0)
+
         cnf_in.writelines(cnf_string)
         cnf_in.flush()
 
         subprocess.run(["minisat", "out.cnf", "solution.cnf"])
         cnf_in.close()
-       #  input()
-        #  with open("solution.cnf", "r") as f:
-            #  solved = f.readline()
-            #  if solved.strip() == "UNSAT":
-                #  unsat_count += 1
-                #  fg.remove_unit()
-                #  print("UNSAT")
+
         is_solved = cnf_out.readline().strip() == "SAT"
-        print(is_solved)
         if is_solved:
             solution = cnf_out.readline()
             solution = solution.split(" ")
             solution = solution[:-1] #all but last 0
             res = c.decode_from_cnf_str(solution)
-            #  print(res)
             with open(f"output/result{num_of_results}.html", "w") as html_file:
                 html_file.writelines(timetable_to_html(res) )
 
             num_of_results += 1
+
+            #increase number of clauses
+            tmp = cnf_string.split("\n")
+            num_of_clauses = int(tmp[0].split(" ")[-1]) + 1
+            num_of_vars = int(tmp[0].split(" ")[2])
+            cnf_string = f"p cnf {num_of_vars} {num_of_clauses}\n" + "\n".join(tmp[1:])
+
             #we forbid current solution so we get other combinations
             tmp : str = ''
             for s in solution:
@@ -277,9 +261,8 @@ def main():
                     tmp += s[1:] + ' '#then add positive
                 else: #else add negated
                     tmp += '-' + s + ' '
+            
             cnf_string += tmp + '0\n'
-            print(cnf_string)
-            #  input()
         else:
             fg.remove_unit()
             fg.code()
