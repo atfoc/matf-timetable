@@ -1,3 +1,4 @@
+import os
 from formula_generator import FormulaGenerator
 from dimacs_coder import DimacsCoder
 import typing as ty
@@ -15,7 +16,7 @@ def main():
     fg.code()
     c = DimacsCoder(fg.formula)
     dimacs_string = c.create_dimacs_string()
-
+    FNULL = open(os.devnull, 'w')
     while True:
         if unsat_count > 1000 or num_of_results > 100:
             break
@@ -25,7 +26,7 @@ def main():
         dimacs_in.writelines(dimacs_string)
         dimacs_in.flush()
 
-        subprocess.run(["minisat", "out.cnf", "solution.cnf"])
+        subprocess.run(["minisat", "out.cnf", "solution.cnf"], stdout = FNULL)
         dimacs_in.close()
 
         is_solved = dimacs_out.readline().strip() == "SAT"
