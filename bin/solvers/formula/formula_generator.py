@@ -15,13 +15,15 @@ def sqlite_connection_str(path: str)->str:
 
 class FormulaGenerator:
     def __init__(self, filepath : str):
-        self.formula : ty.List[disjunction] = []
+        """:param filepath - path to input file"""
+        self.formula : ty.List[disjunction] = [] #resulting formula
         self.filepath : str = filepath
-        self.groups : str = ''
-        self.courses : str = ''
-        self.query_result: ResultProxy = None
-        self.course_units : ty.Dict[str, timetable_unit] = None
-        self.removed_unit : timetable_unit = None
+        self.groups : str = '' #faculty groups
+        self.all_timetable_units : ty.List[timetable_unit] = [] #list of all timetable units
+        self.courses : str = '' #courses that user wants to listen
+        self.query_result: ResultProxy = None #data from db given by query built from input data
+        self.course_units : ty.Dict[str, timetable_unit] = None #maping from string("subject type group time") to timetable unit
+        self.removed_unit : timetable_unit = None #used when removing a unit if formula is unsat
     
     def __parse_input(self):
         courses = []
@@ -30,8 +32,7 @@ class FormulaGenerator:
         groups = ''
         with open(self.filepath, "r") as f:
             groups = f.readline().strip()
-            for line in f.readlines():
-                courses.append(line.strip())
+            courses = [line.strip() for line in f.readlines()]
 
         self.groups = groups
         self.courses = courses
@@ -79,7 +80,7 @@ class FormulaGenerator:
         query = self.__build_query(m)
 
         self.query_result: ResultProxy = conn.execute(query)
-        self.all_timetable_units = set()
+        self.all_timetable_units = set() #we don't want duplicates
         for result in self.query_result:
             self.all_timetable_units.add(timetable_unit(result[1],result[2],\
                                         result[3],result[4],result[5],result[0],result[7],'hash'))
@@ -89,7 +90,7 @@ class FormulaGenerator:
         self.course_units = {}
         for unit in self.all_timetable_units:
             lecture_name_type : timetable_unit= unit.subject + ' ' + unit.type_text()
-            if lecture_name_type in self.course_units:#      day  start end room
+            if lecture_name_type in self.course_units:
                 self.course_units[lecture_name_type].append(unit)
             else:
                 self.course_units[lecture_name_type] = [unit]
@@ -98,16 +99,14 @@ class FormulaGenerator:
     #YOLO = YOU ONLY LISTEN ONCE
     def __YOLO(self):
         for (name, units) in self.course_units.items():
-            disjuncts : ty.List[literal] = []    
-            for unit in units:
-                disjuncts.append(literal(unit))
+            
+            disjuncts : ty.List[literal] = [literal(unit) for unit in units] 
             self.formula.append(disjuncts)
             combs = combinations(units, len(units)-1)
+
             if len(units) > 2:
                 for comb in combs:
-                    disjuncts : ty.List[literal] = []
-                    for unit in comb:
-                        disjuncts.append(literal(unit, negated = True))
+                    disjuncts : ty.List[literal] = [literal(unit, negated = True) for unit in comb]
                     self.formula.append(disjuncts)
             elif len(units) == 2:
                 self.formula.append([literal(units[0], negated = True), literal(units[1], negated = True)])
@@ -125,7 +124,7 @@ class FormulaGenerator:
         collisions = set()
         for day in days:
             for term in day:
-                if term is not None and len(term) > 1:#imamo vise predavanja u jednom terminu
+                if term is not None and len(term) > 1:
                     collisions.add("||".join(term)) #moze li ovo eefikasnije?
 
         #  print(collisions)
@@ -134,9 +133,7 @@ class FormulaGenerator:
             if len(tmp) > 2:
                 combs = combinations(tmp, len(tmp)-1)
                 for comb in combs:
-                    disjuncts : ty.List[literal] = []
-                    for l in comb:
-                        disjuncts.append(literal(l, negated = True))
+                    disjuncts : ty.List[literal] = [literal(l, negated = True) for l in comb]
                     self.formula.append(disjuncts)
             elif len(tmp) == 2:
                 self.formula.append([literal(tmp[0], negated = True), literal(tmp[1], negated = True)])
@@ -147,7 +144,7 @@ class FormulaGenerator:
         self.course_units = {}
         self.formula = []
         self.removed_unit = self.all_timetable_units[0] 
-        print(self.removed_unit)
+        #  print(self.removed_unit)
         self.all_timetable_units.remove(self.removed_unit)
 
     def code(self):
