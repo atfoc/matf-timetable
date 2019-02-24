@@ -5,6 +5,8 @@ from sqlalchemy.engine import ResultProxy
 from sqlalchemy.sql import select
 from itertools import combinations
 from utils.html_writer import timetable_to_html
+from dimacs_coder import DimacsCoder
+from logic_classes import literal, disjunction
 import typing as ty
 import subprocess
 
@@ -12,60 +14,6 @@ def sqlite_connection_str(path: str)->str:
     """ :param path - absolute path to db or :memory: for in memory db"""
     return f'sqlite:///{path}'
 
-class literal:
-    def __init__(self, unit : timetable_unit, negated = False):
-        self.unit : timetable_unit = unit
-        self.negated = negated
-        self.use = True
-    def __str__(self):
-        return ("NOT" if self.negated else 'YES') + str(self.unit)
-    def __repr__(self):
-        return self.__str__()
-
-class disjunction:
-    def __init__(self, literals : ty.List[literal]):
-        self.literals = literals
-
-class cnf_coded_formula:
-    def __init__(self, formula : ty.List[disjunction]):
-        self.formula : ty.List[disjunction] = formula
-        self.num_of_clauses = 0
-
-    def __create_cnf_mapping(self):
-        self.cnf_course_maping = {}
-        self.cnf_course_maping_inverse = {}
-        i=1 #has to be 1 because 0 has predefined value
-        for disjunction in self.formula:
-            for literal in disjunction:
-                #TODO ispitati zasto se ovo tacno desava
-                if str(literal.unit) in self.cnf_course_maping:
-                    continue
-                self.cnf_course_maping[str(literal.unit)] = i
-                self.cnf_course_maping_inverse[i] = literal.unit
-                i+=1
-        self.num_of_clauses = i-1
-        #  print(self.cnf_course_maping)
-
-    def create_cnf_str(self):
-        self.__create_cnf_mapping()
-        output_string : str = ''
-        for disjunction in self.formula:
-            for literal in disjunction:
-                output_string += ('-' if literal.negated else '') + str(self.cnf_course_maping[str(literal.unit)]) + ' '
-            output_string += '0\n'
-        tmp = output_string.strip().split('\n')
-        output_string = f'p cnf {self.num_of_clauses} {len(tmp)}' + '\n' + output_string
-        #  print(output_string)
-        return output_string
-
-    def decode_from_cnf_str(self, solution: ty.List[int]):
-        result : ty.List[timetable_unit] = []
-        for s in solution:
-            if s[0] != '-':
-                result.append(self.cnf_course_maping_inverse[int(s)])
-            #  else:
-            #  result.append(self.cnf_course_maping_inverse[int(s)])
-        return result        
 
 class FormulaGenerator:
     def __init__(self, filepath : str):
@@ -194,6 +142,7 @@ class FormulaGenerator:
                     self.formula.append(disjuncts)
             elif len(tmp) == 2:
                 self.formula.append([literal(tmp[0], negated = True), literal(tmp[1], negated = True)])
+
     def remove_unit(self):
         if self.removed_unit != None:
             self.all_timetable_units.append(self.removed_unit)
@@ -222,37 +171,37 @@ def main():
     num_of_results = 0
     unsat_count = 0
     fg.code()
-    c = cnf_coded_formula(fg.formula)
-    cnf_string = c.create_cnf_str()
+    c = DimacsCoder(fg.formula)
+    dimacs_string = c.create_dimacs_string()
 
     while True:
         if unsat_count > 1000 or num_of_results > 100:
             break
-        cnf_in = open("out.cnf", "w")
-        cnf_out = open("solution.cnf", "r")
+        dimacs_in = open("out.cnf", "w")
+        dimacs_out = open("solution.cnf", "r")
 
-        cnf_in.writelines(cnf_string)
-        cnf_in.flush()
+        dimacs_in.writelines(dimacs_string)
+        dimacs_in.flush()
 
         subprocess.run(["minisat", "out.cnf", "solution.cnf"])
-        cnf_in.close()
+        dimacs_in.close()
 
-        is_solved = cnf_out.readline().strip() == "SAT"
+        is_solved = dimacs_out.readline().strip() == "SAT"
         if is_solved:
-            solution = cnf_out.readline()
+            solution = dimacs_out.readline()
             solution = solution.split(" ")
             solution = solution[:-1] #all but last 0
-            res = c.decode_from_cnf_str(solution)
+            res = c.decode_dimacs_string(solution)
             with open(f"output/result{num_of_results}.html", "w") as html_file:
                 html_file.writelines(timetable_to_html(res) )
 
             num_of_results += 1
 
             #increase number of clauses
-            tmp = cnf_string.split("\n")
+            tmp = dimacs_string.split("\n")
             num_of_clauses = int(tmp[0].split(" ")[-1]) + 1
             num_of_vars = int(tmp[0].split(" ")[2])
-            cnf_string = f"p cnf {num_of_vars} {num_of_clauses}\n" + "\n".join(tmp[1:])
+            dimacs_string = f"p cnf {num_of_vars} {num_of_clauses}\n" + "\n".join(tmp[1:])
 
             #we forbid current solution so we get other combinations
             tmp : str = ''
@@ -262,15 +211,15 @@ def main():
                 else: #else add negated
                     tmp += '-' + s + ' '
             
-            cnf_string += tmp + '0\n'
+            dimacs_string += tmp + '0\n'
         else:
             fg.remove_unit()
             fg.code()
-            c = cnf_coded_formula(fg.formula)
-            cnf_string = c.create_cnf_str()
+            c = DimacsCoder(fg.formula)
+            dimacs_string = c.create_dimacs_string()
             unsat_count += 1
             print("UNSAT")
-        cnf_out.close()
+        dimacs_out.close()
 
 if __name__ == "__main__":
     main()
