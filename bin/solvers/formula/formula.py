@@ -233,35 +233,61 @@ def main():
 
     fg = FormulaGenerator("test_input.txt")
 
+    num_of_results = 1
     unsat_count = 0
+    fg.code()
+    c = cnf_coded_formula(fg.formula)
+    cnf_string = c.create_cnf_str()
+
     while True:
-        if unsat_count > 1000:
+        if unsat_count > 1000 or num_of_results > 20:
             break
-        fg.code()
-        c = cnf_coded_formula(fg.formula)
-        cnf_string = c.create_cnf_str()
+        cnf_in = open("out.cnf", "w")
+        cnf_out = open("solution.cnf", "r")
+        #  cnf_in.truncate()
+        #  cnf_in.seek(0)
+        cnf_in.writelines(cnf_string)
+        cnf_in.flush()
 
-        with open("out.cnf", "w") as f:
-            f.writelines(cnf_string)
-
-        cnf_in = open("out.cnf", "r")
-        cnf_out = open("solution.cnf", "w")
         subprocess.run(["minisat", "out.cnf", "solution.cnf"])
-        with open("solution.cnf", "r") as f:
-            solved = f.readline()
-            if solved.strip() == "SAT":
-                solution = f.readline()
-                solution = solution.split(" ")
-                solution = solution[:-1]
-                res = c.decode_from_cnf_str(solution)
-                #  print(res)
-                with open("result.html", "w") as html_file:
-                    html_file.writelines(timetable_to_html(res) )
-                break
-            else:
-                unsat_count += 1
-                fg.remove_unit()
-                print("UNSAT")
+        cnf_in.close()
+       #  input()
+        #  with open("solution.cnf", "r") as f:
+            #  solved = f.readline()
+            #  if solved.strip() == "UNSAT":
+                #  unsat_count += 1
+                #  fg.remove_unit()
+                #  print("UNSAT")
+        is_solved = cnf_out.readline().strip() == "SAT"
+        print(is_solved)
+        if is_solved:
+            solution = cnf_out.readline()
+            solution = solution.split(" ")
+            solution = solution[:-1] #all but last 0
+            res = c.decode_from_cnf_str(solution)
+            #  print(res)
+            with open(f"output/result{num_of_results}.html", "w") as html_file:
+                html_file.writelines(timetable_to_html(res) )
+
+            num_of_results += 1
+            #we forbid current solution so we get other combinations
+            tmp : str = ''
+            for s in solution:
+                if s[0] == '-':#if negated
+                    tmp += s[1:] + ' '#then add positive
+                else: #else add negated
+                    tmp += '-' + s + ' '
+            cnf_string += tmp + '0\n'
+            print(cnf_string)
+            #  input()
+        else:
+            fg.remove_unit()
+            fg.code()
+            c = cnf_coded_formula(fg.formula)
+            cnf_string = c.create_cnf_str()
+            unsat_count += 1
+            print("UNSAT")
+        cnf_out.close()
 
 if __name__ == "__main__":
     main()
