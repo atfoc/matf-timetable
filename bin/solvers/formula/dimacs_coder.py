@@ -37,7 +37,7 @@ class DimacsCoder:
     def decode_dimacs_string(self, solution: ty.List[int]):
         result : ty.List[timetable_unit] = []
         for s in solution:
-            if s[0] != '-':
+            if s > 0:
                 result.append(self.dimacs_course_maping_inverse[int(s)])
             #  else:
             #  result.append(self.dimacs_course_maping_inverse[int(s)])
