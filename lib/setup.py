@@ -8,7 +8,7 @@ install_requires = [
 'idna==2.8',
 'requests==2.21.0',
 'soupsieve==1.7.3',
-'urllib3==1.24.1'
+'urllib3==1.26.5'
 ]
 setup(name='timetable_parser', version='0.1', packages=['timetable_parser'],
       install_requires=install_requires)
