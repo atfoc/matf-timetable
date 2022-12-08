@@ -3,7 +3,7 @@ from distutils.core import setup
 install_requires = [
 'beautifulsoup4==4.7.1',
 'bs4==0.0.1',
-'certifi==2018.11.29',
+'certifi==2022.12.7',
 'chardet==3.0.4',
 'idna==2.8',
 'requests==2.21.0',
